@@ -29,7 +29,7 @@ import backtrader as bt
 from .utils.py3 import zip, string_types, with_metaclass
 
 
-def findbases(kls, topclass):
+def findbases(kls, topclass):  # 找出kls所有父类里面属于topclass子类的部分
     retval = list()
     for base in kls.__bases__:
         if issubclass(base, topclass):
@@ -39,7 +39,7 @@ def findbases(kls, topclass):
     return retval
 
 
-def findowner(owned, cls, startlevel=2, skip=None):
+def findowner(owned, cls, startlevel=2, skip=None):  # 有点看不懂,先不管了
     # skip this frame and the caller's -> start at 2
     for framelevel in itertools.count(startlevel):
         try:
@@ -63,7 +63,7 @@ def findowner(owned, cls, startlevel=2, skip=None):
     return None
 
 
-class MetaBase(type):
+class MetaBase(type):  # 所有的metaclass都从这继承
     def doprenew(cls, *args, **kwargs):
         return cls, args, kwargs
 
@@ -82,6 +82,10 @@ class MetaBase(type):
         return _obj, args, kwargs
 
     def __call__(cls, *args, **kwargs):
+        # 注意metaclass的__call__和class的不一样,这是在生成一个instance时候就执行的
+        # 例如a = A(),那这时候就执行了A的__call__
+        # 而在call里面会再执行__new__和__init__
+        # 因此这部分代码就是给__new__和__init__多加了三个步骤
         cls, args, kwargs = cls.doprenew(*args, **kwargs)
         _obj, args, kwargs = cls.donew(*args, **kwargs)
         _obj, args, kwargs = cls.dopreinit(_obj, *args, **kwargs)
@@ -91,7 +95,7 @@ class MetaBase(type):
 
 
 class AutoInfoClass(object):
-    _getpairsbase = classmethod(lambda cls: OrderedDict())
+    _getpairsbase = classmethod(lambda cls: OrderedDict())  # 简单的一个classmethod用来生成空OrderedDict
     _getpairs = classmethod(lambda cls: OrderedDict())
     _getrecurse = classmethod(lambda cls: False)
 
@@ -202,7 +206,7 @@ class AutoInfoClass(object):
 
 class MetaParams(MetaBase):
     def __new__(meta, name, bases, dct):
-        # Remove params from class definition to avod inheritance
+        # Remove params from class definition to avoid inheritance
         # (and hence "repetition")
         newparams = dct.pop('params', ())
 
@@ -309,7 +313,7 @@ class ItemCollection(object):
     def __len__(self):
         return len(self._items)
 
-    def append(self, item, name=None):
+    def append(self, item, name=None):  # 其实不能不传name,否则会报attribute name must be string, not 'NoneType'
         setattr(self, name, item)
         self._items.append(item)
         if name:
