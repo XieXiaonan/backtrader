@@ -34,7 +34,7 @@ def findbases(kls, topclass):  # 找出kls所有父类里面属于topclass子类
     for base in kls.__bases__:
         if issubclass(base, topclass):
             retval.extend(findbases(base, topclass))
-            retval.append(base)
+            retval.append(base)  # 但这样会不会有重复的可能?
 
     return retval
 
@@ -96,7 +96,7 @@ class MetaBase(type):  # 所有的metaclass都从这继承
 
 class AutoInfoClass(object):
     _getpairsbase = classmethod(lambda cls: OrderedDict())  # 简单的一个classmethod用来生成空OrderedDict
-    _getpairs = classmethod(lambda cls: OrderedDict())
+    _getpairs = classmethod(lambda cls: OrderedDict())  # 同上
     _getrecurse = classmethod(lambda cls: False)
 
     @classmethod
@@ -106,7 +106,7 @@ class AutoInfoClass(object):
         baseinfo = cls._getpairs().copy()
         obasesinfo = OrderedDict()
         for obase in otherbases:
-            if isinstance(obase, (tuple, dict)):
+            if isinstance(obase, (tuple, dict)):  # 看obase是否tuple或者dict
                 obasesinfo.update(obase)
             else:
                 obasesinfo.update(obase._getpairs())
@@ -205,10 +205,10 @@ class AutoInfoClass(object):
 
 
 class MetaParams(MetaBase):
-    def __new__(meta, name, bases, dct):
+    def __new__(meta, name, bases, dct):  # 用来生成一个metaclass的,dct代表生成这个meta的attribute
         # Remove params from class definition to avoid inheritance
         # (and hence "repetition")
-        newparams = dct.pop('params', ())
+        newparams = dct.pop('params', ())  # 这个metaclass就是用来处理params的,看起来好像之后所有的类以及metaclass都继承于它,所以就是backtrader里面所有类都支持params?
 
         packs = 'packages'
         newpackages = tuple(dct.pop(packs, ()))  # remove before creation
